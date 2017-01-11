@@ -14,6 +14,7 @@ CHANGELOG Roundcube Webmail
 - Added Kolab calendar 3.2.16
 - Fix sabre/vobject in composer.json was missing for calendar plugin
 - Added Kolab tasklist 3.2.16
+- Added SpamAssassin-User-Prefs-SQL 1.16 (2017-01-02)
 
 RELEASE 1.3-beta
 ----------------
