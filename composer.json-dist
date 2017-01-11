@@ -31,10 +31,12 @@
         "pear-pear.php.net/net_smtp": "~1.7.1",
         "pear-pear.php.net/crypt_gpg": "~1.6.0@beta",
         "roundcube/net_sieve": "~1.5.0",
+		"sabre/vobject": "~3.3.3",
         "endroid/qrcode": "~1.6.5"
     },
     "require-dev": {
-        "phpunit/phpunit": "*"
+        "phpunit/phpunit": "*",
+		"pear/auth_sasl": "dev-master"
     },
     "suggest": {
         "pear-pear.php.net/net_ldap2": "~2.2.0 required for connecting to LDAP address books",
