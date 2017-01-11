@@ -9,6 +9,7 @@ CHANGELOG Roundcube Webmail
 - Enhanced mimetypes.php
 - Replaced favicon in skin larry
 - Replaced favicon in skin classic
+- Fix in the domain part. Unicode domains did not work
 
 RELEASE 1.3-beta
 ----------------
