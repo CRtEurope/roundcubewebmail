@@ -7,6 +7,7 @@ CHANGELOG Roundcube Webmail
 - Fix bug where external content in src attribute of input/video tags was not secured (#5583)
 - Fix PHP error on update of a contact with multiple email addresses when using PHP 7.1 (#5587)
 - Enhanced mimetypes.php
+- Replaced favicon in skin larry
 
 RELEASE 1.3-beta
 ----------------
