@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * Keep log of BruteforceBreaker
+ * default: true
+ **/
+$rcmail_config['bruteforcebreaker_keep_trace'] = true;
+
+/**
+ * Number of login attemps before ban
+ * default: 5
+ **/
+$rcmail_config['bruteforcebreaker_nb_attemps'] = 5;
+
+/**
+ * Ban duration in seconds
+ * default: 1800 (30min)
+ **/
+$rcmail_config['bruteforcebreaker_duration'] = 1800;
+
+/**
+ * Whitelist
+ * default: null
+ * format: array('192.168.1.1', '192.168.1.2');
+ **/
+$rcmail_config['bruteforcebreaker_whitelist'] = array('127.0.0.1', '::1');
+?>
