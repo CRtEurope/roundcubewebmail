@@ -5,6 +5,7 @@ CHANGELOG Roundcube Webmail
 - Fix bug where external content in src attribute of input/video tags was not secured (#5583)
 - Fix PHP error on update of a contact with multiple email addresses when using PHP 7.1 (#5587)
 - Fix bug where mail content frame couldn't be reset in some corner cases (#5608)
+- Fix bug where some classic skin images were not displayed in IE/Edge (#5614)
 - Kolab chameleon-blue skin with fix preview frame border in widescreen mode
 - Prevention from referrer leaking (Test on https://webbkoll.dataskydd.net/en)
 - Kolab chameleon skin with fix preview frame border in widescreen mode
