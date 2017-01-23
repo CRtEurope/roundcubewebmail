@@ -22,6 +22,7 @@ CHANGELOG Roundcube Webmail
 - Added Login Language 0.3
 - Added show_pgp_mime
 - Added logout_redirect
+- Added authres_status 0.2.5
 
 RELEASE 1.3-beta
 ----------------
