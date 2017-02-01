@@ -1,5 +1,6 @@
 CHANGELOG Roundcube Webmail
 ===========================
+- Enigma: Always use detached signatures (#5624)
 - Fix missing thread expand icon on search result in widescreen mode (#5613)
 - Fix bug where image data URIs in css style were treated as evil/remote in mail preview (#5580)
 - Fix bug where external content in src attribute of input/video tags was not secured (#5583)
