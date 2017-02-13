@@ -33,11 +33,7 @@ class rcube_sieve_engine
     protected $script  = array();
     protected $exts    = array();
     protected $active  = array();
-    protected $headers = array(
-        'subject' => 'Subject',
-        'from'    => 'From',
-        'to'      => 'To',
-    );
+    protected $headers = array();
     protected $addr_headers = array(
         // Required
         "from", "to", "cc", "bcc", "sender", "resent-from", "resent-to",
@@ -63,7 +59,7 @@ class rcube_sieve_engine
         1 => 'notifyimportancehigh'
     );
 
-    const VERSION  = '8.8';
+    const VERSION  = '8.7';
     const PROGNAME = 'Roundcube (Managesieve)';
     const PORT     = 4190;
 
@@ -75,6 +71,11 @@ class rcube_sieve_engine
     {
         $this->rc     = rcube::get_instance();
         $this->plugin = $plugin;
+        $this->headers = $this->rc->config->get('managesieve_default_headers', array(
+                'subject' => 'Subject',
+                'from'    => 'From',
+                'to'      => 'To',
+        ));
     }
 
     /**
@@ -84,12 +85,11 @@ class rcube_sieve_engine
     {
         // register UI objects
         $this->rc->output->add_handlers(array(
-            'filterslist'      => array($this, 'filters_list'),
-            'filtersetslist'   => array($this, 'filtersets_list'),
-            'filterframe'      => array($this, 'filter_frame'),
-            'filterform'       => array($this, 'filter_form'),
-            'filtersetform'    => array($this, 'filterset_form'),
-            'filterseteditraw' => array($this, 'filterset_editraw'),
+            'filterslist'    => array($this, 'filters_list'),
+            'filtersetslist' => array($this, 'filtersets_list'),
+            'filterframe'    => array($this, 'filter_frame'),
+            'filterform'     => array($this, 'filter_form'),
+            'filtersetform'  => array($this, 'filterset_form'),
         ));
 
         // connect to managesieve server
@@ -145,8 +145,6 @@ class rcube_sieve_engine
             $this->rc->output->set_env('currentset', $this->sieve->current);
             $_SESSION['managesieve_current'] = $this->sieve->current;
         }
-
-        $this->rc->output->set_env('raw_sieve_editor', $this->rc->config->get('managesieve_raw_editor', true));
 
         return $error;
     }
@@ -295,8 +293,7 @@ class rcube_sieve_engine
                     if ($result === true) {
                         $this->rc->output->show_message('managesieve.filterdeleted', 'confirmation');
                         $this->rc->output->command('managesieve_updatelist', 'del', array('id' => $fid));
-                    }
-                    else {
+                    } else {
                         $this->rc->output->show_message('managesieve.filterdeleteerror', 'error');
                     }
                 }
@@ -333,8 +330,7 @@ class rcube_sieve_engine
                         $this->rc->output->show_message('managesieve.moved', 'confirmation');
                         $this->rc->output->command('managesieve_updatelist', 'list',
                             array('list' => $result, 'clear' => true, 'set' => $to));
-                    }
-                    else {
+                    } else {
                         $this->rc->output->show_message('managesieve.moveerror', 'error');
                     }
                 }
@@ -356,8 +352,7 @@ class rcube_sieve_engine
                             $this->rc->output->show_message('managesieve.activated', 'confirmation');
                         $this->rc->output->command('managesieve_updatelist', 'update',
                             array('id' => $fid, 'disabled' => $rule['disabled']));
-                    }
-                    else {
+                    } else {
                         if ($rule['disabled'])
                             $this->rc->output->show_message('managesieve.deactivateerror', 'error');
                         else
@@ -375,8 +370,7 @@ class rcube_sieve_engine
                     $this->rc->output->show_message('managesieve.setactivated', 'confirmation');
                     $this->rc->output->command('managesieve_updatelist', 'setact',
                         array('name' => $script_name, 'active' => true, 'all' => !$kep14));
-                }
-                else {
+                } else {
                     $this->rc->output->show_message('managesieve.setactivateerror', 'error');
                 }
             }
@@ -389,8 +383,7 @@ class rcube_sieve_engine
                     $this->rc->output->show_message('managesieve.setdeactivated', 'confirmation');
                     $this->rc->output->command('managesieve_updatelist', 'setact',
                         array('name' => $script_name, 'active' => false));
-                }
-                else {
+                } else {
                     $this->rc->output->show_message('managesieve.setdeactivateerror', 'error');
                 }
             }
@@ -403,8 +396,7 @@ class rcube_sieve_engine
                     $this->rc->output->command('managesieve_updatelist', 'setdel',
                         array('name' => $script_name));
                     $this->rc->session->remove('managesieve_current');
-                }
-                else {
+                } else {
                     $this->rc->output->show_message('managesieve.setdeleteerror', 'error');
                 }
             }
@@ -414,7 +406,7 @@ class rcube_sieve_engine
                 $script_name = rcube_utils::get_input_value('_set', rcube_utils::INPUT_GPC, true);
                 $script      = $this->sieve->get_script($script_name);
 
-                if ($script === false) {
+                if (is_a($script, 'PEAR_Error')) {
                     exit;
                 }
 
@@ -489,30 +481,6 @@ class rcube_sieve_engine
                     ),
                 );
             }
-        }
-
-        $this->send();
-    }
-
-    function saveraw()
-    {
-        // Init plugin and handle managesieve connection
-        $error = $this->start();
-
-        $script_name = rcube_utils::get_input_value('_set', rcube_utils::INPUT_POST);
-
-        $result = $this->sieve->save_script($script_name, $_POST['rawsetcontent']);
-
-        if ($result === false) {
-            $this->rc->output->show_message('managesieve.filtersaveerror', 'error');
-            $errorLines = $this->sieve->get_error_lines();
-            if (count($errorLines) > 0) {
-                $this->rc->output->set_env("sieve_errors", $errorLines);
-            }
-        }
-        else {
-            $this->rc->output->show_message('managesieve.setupdated', 'confirmation');
-            $this->rc->output->command('parent.managesieve_updatelist', 'refresh');
         }
 
         $this->send();
@@ -616,11 +584,9 @@ class rcube_sieve_engine
                 $this->rc->output->show_message('managesieve.setcreated', 'confirmation');
                 $this->rc->output->command('parent.managesieve_updatelist', 'setadd',
                     array('name' => $name, 'index' => $index));
-            }
-            else if ($msg) {
+            } else if ($msg) {
                 $this->rc->output->command('display_message', $msg, 'error');
-            }
-            else if ($error) {
+            } else if ($error) {
                 $this->rc->output->show_message($error, 'error');
             }
         }
@@ -689,7 +655,7 @@ class rcube_sieve_engine
             if ($name == '')
                 $this->errors['name'] = $this->plugin->gettext('cannotbeempty');
             else {
-                foreach ($this->script as $idx => $rule)
+                foreach($this->script as $idx => $rule)
                     if($rule['name'] == $name && $idx != $fid) {
                         $this->errors['name'] = $this->plugin->gettext('ruleexist');
                         break;
@@ -1148,9 +1114,8 @@ class rcube_sieve_engine
                     $fid = $this->sieve->script->update_rule($fid, $this->form);
                 }
 
-                if ($fid !== false) {
+                if ($fid !== false)
                     $save = $this->save_script();
-                }
 
                 if ($save && $fid !== false) {
                     $this->rc->output->show_message('managesieve.filtersaved', 'confirmation');
@@ -1170,6 +1135,7 @@ class rcube_sieve_engine
                 }
                 else {
                     $this->rc->output->show_message('managesieve.filtersaveerror', 'error');
+//                  $this->rc->output->send();
                 }
             }
             else {
@@ -1186,9 +1152,6 @@ class rcube_sieve_engine
         if (isset($_GET['_framed']) || isset($_POST['_framed'])) {
             if (isset($_GET['_newset']) || isset($_POST['_newset'])) {
                 $this->rc->output->send('managesieve.setedit');
-            }
-            else if (isset($_GET['_seteditraw']) || isset($_POST['_seteditraw'])) {
-                $this->rc->output->send('managesieve.seteditraw');
             }
             else {
                 $this->rc->output->send('managesieve.filteredit');
@@ -1229,9 +1192,8 @@ class rcube_sieve_engine
     function filtersets_list($attrib, $no_env = false)
     {
         // add id to message list table if not specified
-        if (!strlen($attrib['id'])) {
+        if (!strlen($attrib['id']))
             $attrib['id'] = 'rcmfiltersetslist';
-        }
 
         $list = $this->list_scripts();
 
@@ -1284,44 +1246,6 @@ class rcube_sieve_engine
     function filter_frame($attrib)
     {
         return $this->rc->output->frame($attrib, true);
-    }
-
-    function filterset_editraw($attrib)
-    {
-        $script_name = isset($_GET['_set']) ? $_GET['_set'] : $_POST['_set'];
-        $script      = $this->sieve->get_script($script_name);
-        $script_post = $_POST['rawsetcontent'];
-
-        $out = '<form name="filtersetrawform" action="./" method="post" enctype="multipart/form-data">'."\n";
-
-        $hiddenfields = new html_hiddenfield();
-        $hiddenfields->add(array('name' => '_task',   'value' => $this->rc->task));
-        $hiddenfields->add(array('name' => '_action', 'value' => 'plugin.managesieve-saveraw'));
-        $hiddenfields->add(array('name' => '_set',    'value' => $script_name));
-        $hiddenfields->add(array('name' => '_seteditraw', 'value' => 1));
-        $hiddenfields->add(array('name' => '_framed', 'value' => ($_POST['_framed'] || $_GET['_framed'] ? 1 : 0)));
-
-        $out .= $hiddenfields->show();
-
-        $txtarea = new html_textarea(array(
-                'id'   => 'rawfiltersettxt',
-                'name' => 'rawsetcontent',
-                'rows' => '15'
-        ));
-
-        $out .= $txtarea->show($script_post !== null ? $script_post : ($script !== false ? rtrim($script) : ''));
-
-        $this->rc->output->add_gui_object('sievesetrawform', 'filtersetrawform');
-        $this->plugin->include_stylesheet('codemirror/lib/codemirror.css');
-        $this->plugin->include_script('codemirror/lib/codemirror.js');
-        $this->plugin->include_script('codemirror/addon/selection/active-line.js');
-        $this->plugin->include_script('codemirror/mode/sieve/sieve.js');
-
-        if ($script === false) {
-            $this->rc->output->show_message('managesieve.filterunknownerror', 'error');
-        }
-
-        return $out;
     }
 
     function filterset_form($attrib)
@@ -1432,7 +1356,7 @@ class rcube_sieve_engine
 
         // 'any' flag
         if ((!isset($this->form) && empty($scr['tests']) && !empty($scr))
-            || (count($scr['tests']) == 1 && $scr['tests'][0]['test'] == 'true' && !$scr['tests'][0]['not'])
+            || (sizeof($scr['tests']) == 1 && $scr['tests'][0]['test'] == 'true' && !$scr['tests'][0]['not'])
         ) {
             $any = true;
         }
@@ -1493,7 +1417,7 @@ class rcube_sieve_engine
 
         $out .= $input_join . html::label($field_id, rcube::Q($this->plugin->gettext('filterany')));
 
-        $rows_num = !empty($scr['tests']) ? count($scr['tests']) : 1;
+        $rows_num = !empty($scr['tests']) ? sizeof($scr['tests']) : 1;
 
         $out .= '<div id="rules"'.($any ? ' style="display: none"' : '').'>';
         for ($x=0; $x<$rows_num; $x++)
@@ -1505,7 +1429,7 @@ class rcube_sieve_engine
         // actions
         $out .= '<fieldset><legend>' . rcube::Q($this->plugin->gettext('messagesactions')) . "</legend>\n";
 
-        $rows_num = isset($scr) ? count($scr['actions']) : 1;
+        $rows_num = isset($scr) ? sizeof($scr['actions']) : 1;
 
         $out .= '<div id="actions">';
         for ($x=0; $x<$rows_num; $x++)
@@ -1531,7 +1455,7 @@ class rcube_sieve_engine
     function rule_div($fid, $id, $div=true)
     {
         $rule     = isset($this->form) ? $this->form['tests'][$id] : $this->script[$fid]['tests'][$id];
-        $rows_num = isset($this->form) ? count($this->form['tests']) : count($this->script[$fid]['tests']);
+        $rows_num = isset($this->form) ? sizeof($this->form['tests']) : sizeof($this->script[$fid]['tests']);
 
         // headers select
         $select_header = new html_select(array('name' => "_header[]", 'id' => 'header'.$id,
@@ -1935,7 +1859,7 @@ class rcube_sieve_engine
     function action_div($fid, $id, $div=true)
     {
         $action   = isset($this->form) ? $this->form['actions'][$id] : $this->script[$fid]['actions'][$id];
-        $rows_num = isset($this->form) ? count($this->form['actions']) : count($this->script[$fid]['actions']);
+        $rows_num = isset($this->form) ? sizeof($this->form['actions']) : sizeof($this->script[$fid]['actions']);
 
         $out = $div ? '<div class="actionrow" id="actionrow' .$id .'">'."\n" : '';
 
