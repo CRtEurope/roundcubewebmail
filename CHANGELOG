@@ -26,6 +26,7 @@ CHANGELOG Roundcube Webmail
 - Added show_pgp_mime
 - Added logout_redirect
 - Added authres_status 0.2.5
+- Added lastlogin 0.1.9
 - Make managesieve default headers configurable
 
 RELEASE 1.3-beta
